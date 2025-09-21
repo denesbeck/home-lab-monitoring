@@ -14,3 +14,4 @@ Monitoring stack for my Home Lab based on the [blog post](https://last9.io/blog/
 ## Dashboards
 
 - [Node Exporter Full](https://grafana.com/grafana/dashboards/1860-node-exporter-full/)
+- [Docker Container & Host Metrics](https://grafana.com/grafana/dashboards/10619-docker-host-container-overview/)
