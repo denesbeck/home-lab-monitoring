@@ -356,7 +356,7 @@
             "barAlignment": 0,
             "barWidthFactor": 0.6,
             "drawStyle": "line",
-            "fillOpacity": 10,
+            "fillOpacity": 30,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -374,7 +374,7 @@
             "spanNulls": false,
             "stacking": {
               "group": "A",
-              "mode": "none"
+              "mode": "normal"
             },
             "thresholdsStyle": {
               "mode": "off"
@@ -394,32 +394,9 @@
               }
             ]
           },
-          "unit": "Bps"
+          "unit": "bytes"
         },
-        "overrides": [
-          {
-            "__systemRef": "hideSeriesFrom",
-            "matcher": {
-              "id": "byNames",
-              "options": {
-                "mode": "exclude",
-                "names": ["cadvisor"],
-                "prefix": "All except:",
-                "readOnly": true
-              }
-            },
-            "properties": [
-              {
-                "id": "custom.hideFrom",
-                "value": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": true
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
@@ -427,7 +404,7 @@
         "x": 12,
         "y": 8
       },
-      "id": 9,
+      "id": 11,
       "options": {
         "legend": {
           "calcs": [],
@@ -448,26 +425,39 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "sum(rate(container_network_transmit_bytes_total{name=~\".+\"}[$interval])) by (name)",
+          "expr": "container_memory_rss{name=~\".+\"}",
+          "hide": true,
           "intervalFactor": 2,
           "legendFormat": "{{name}}",
           "refId": "A",
-          "step": 2
+          "step": 20
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "rate(container_network_transmit_bytes_total{id=\"/\"}[$interval])",
+          "expr": "container_memory_usage_bytes{name=~\".+\"}",
           "hide": true,
           "intervalFactor": 2,
-          "legendFormat": "",
+          "legendFormat": "{{name}}",
           "refId": "B",
-          "step": 10
+          "step": 20
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "sum(container_memory_cache{name=~\".+\"}) by (name)",
+          "hide": false,
+          "intervalFactor": 2,
+          "legendFormat": "{{name}}",
+          "refId": "C",
+          "step": 2
         }
       ],
-      "title": "Sent Network Traffic per Container",
+      "title": "Cached Memory per Container (Stacked)",
       "type": "timeseries"
     },
     {
@@ -599,7 +589,7 @@
             "barAlignment": 0,
             "barWidthFactor": 0.6,
             "drawStyle": "line",
-            "fillOpacity": 30,
+            "fillOpacity": 10,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -617,7 +607,7 @@
             "spanNulls": false,
             "stacking": {
               "group": "A",
-              "mode": "normal"
+              "mode": "none"
             },
             "thresholdsStyle": {
               "mode": "off"
@@ -637,7 +627,7 @@
               }
             ]
           },
-          "unit": "bytes"
+          "unit": "Bps"
         },
         "overrides": []
       },
@@ -647,7 +637,7 @@
         "x": 12,
         "y": 16
       },
-      "id": 11,
+      "id": 9,
       "options": {
         "legend": {
           "calcs": [],
@@ -668,46 +658,33 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "container_memory_rss{name=~\".+\"}",
-          "hide": true,
+          "expr": "sum(rate(container_network_transmit_bytes_total{name=~\".+\"}[$interval])) by (name)",
           "intervalFactor": 2,
           "legendFormat": "{{name}}",
           "refId": "A",
-          "step": 20
+          "step": 2
         },
         {
           "datasource": {
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "container_memory_usage_bytes{name=~\".+\"}",
+          "expr": "rate(container_network_transmit_bytes_total{id=\"/\"}[$interval])",
           "hide": true,
           "intervalFactor": 2,
-          "legendFormat": "{{name}}",
+          "legendFormat": "",
           "refId": "B",
-          "step": 20
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "sum(container_memory_cache{name=~\".+\"}) by (name)",
-          "hide": false,
-          "intervalFactor": 2,
-          "legendFormat": "{{name}}",
-          "refId": "C",
-          "step": 2
+          "step": 10
         }
       ],
-      "title": "Cached Memory per Container (Stacked)",
+      "title": "Sent Network Traffic per Container",
       "type": "timeseries"
     }
   ],
   "preload": false,
   "refresh": "10s",
   "schemaVersion": 41,
-  "tags": [],
+  "tags": ["docker"],
   "templating": {
     "list": [
       {
@@ -901,5 +878,5 @@
   "timezone": "browser",
   "title": "Docker Container Metrics",
   "uid": "4dMaCsRZz",
-  "version": 4
+  "version": 1
 }
