@@ -9,13 +9,15 @@ networks:
 
 services:
   promtail:
-    image: grafana/promtail:latest
+    image: grafana/promtail:3.4.2-amd64
     container_name: promtail
     hostname: promtail
+    user: root
     volumes:
       - /var/log:/var/log:ro
       - ./promtail:/etc/promtail:ro
-      - /run/log/journal:/run/log/journal:ro
+      - /var/log/journal:/run/log/journal:ro
+      - /etc/machine-id:/etc/machine-id:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     command:
