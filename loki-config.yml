@@ -38,6 +38,7 @@ compactor:
   retention_enabled: true
   retention_delete_delay: 2h
   delete_request_cancel_period: 24h
+  delete_request_store: filesystem
 
 ruler:
   alertmanager_url: http://localhost:9093
