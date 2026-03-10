@@ -72,6 +72,7 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
       - /run/udev/data:/run/udev/data:ro
+      - /var/lib/node-exporter/textfile:/host/textfile:ro
     command:
       - "--path.procfs=/host/proc"
       - "--path.sysfs=/host/sys"
@@ -80,6 +81,7 @@ services:
       - "--collector.processes"
       - "--collector.interrupts"
       - "--no-collector.systemd"
+      - "--collector.textfile.directory=/host/textfile"
     ports:
       - "127.0.0.1:9100:9100"
     networks:
