@@ -26,7 +26,7 @@ On the host:
 
 ```sh
 printf 'https://discord.com/api/webhooks/...' > alertmanager/discord_webhook
-chmod 600 alertmanager/discord_webhook
+chmod 644 alertmanager/discord_webhook  # Alertmanager runs as UID 65534 inside the container
 docker compose up -d alertmanager
 ```
 
