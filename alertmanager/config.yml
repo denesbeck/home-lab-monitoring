@@ -11,6 +11,10 @@ route:
 receivers:
   - name: "discord-notifications"
     discord_configs:
-      - webhook_url: "YOUR_DISCORD_WEBHOOK_URL"
-        title: '{{ .CommonAnnotations.summary }}'
-        message: '{{ .CommonAnnotations.description }}'
+      - webhook_url_file: /etc/alertmanager/discord_webhook
+        title: '[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .GroupLabels.alertname }}'
+        message: |-
+          {{ range .Alerts -}}
+          **{{ .Annotations.summary }}**
+          {{ .Annotations.description }}
+          {{ end }}
