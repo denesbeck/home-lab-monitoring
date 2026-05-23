@@ -9,7 +9,7 @@ networks:
 
 services:
   promtail:
-    image: grafana/promtail:3.4.2-amd64
+    image: grafana/promtail:3.6.11-amd64
     container_name: promtail
     hostname: promtail
     user: root
@@ -28,7 +28,7 @@ services:
       - monitoring
     restart: unless-stopped
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:3.7.2
     container_name: loki
     hostname: loki
     volumes:
@@ -43,7 +43,7 @@ services:
       - monitoring
     restart: unless-stopped
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.11.3
     container_name: prometheus
     hostname: prometheus
     volumes:
@@ -64,7 +64,7 @@ services:
     restart: unless-stopped
 
   node-exporter:
-    image: prom/node-exporter:latest
+    image: prom/node-exporter:v1.11.1
     container_name: node-exporter
     hostname: node-exporter
     volumes:
@@ -89,7 +89,7 @@ services:
     restart: unless-stopped
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.52.0
+    image: gcr.io/cadvisor/cadvisor:v0.55.1
     container_name: cadvisor
     hostname: cadvisor
     volumes:
@@ -105,7 +105,7 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:13.0.1
     container_name: grafana
     volumes:
       - grafana_data:/var/lib/grafana
@@ -123,7 +123,7 @@ services:
     restart: unless-stopped
 
   alertmanager:
-    image: prom/alertmanager:latest
+    image: prom/alertmanager:v0.32.1
     container_name: alertmanager
     hostname: alertmanager
     volumes:
