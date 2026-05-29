@@ -29,10 +29,14 @@ groups:
           description: "Disk usage is > 85%\n  VALUE = {{ $value }}%\n  LABELS: {{ $labels }}"
 
       - alert: UnusualMemoryGrowth
+        # deriv() is per-second, so this threshold is -10 MB/s (~600 MB/min) of
+        # sustained MemAvailable decline -- intentionally leak-only; tighter
+        # thresholds false-fire on benign activity (e.g. ~11 MB/min during media
+        # playback, 2026-05-28).
         expr: deriv(node_memory_MemAvailable_bytes[30m]) < -10 * 1024 * 1024
         for: 10m
         labels:
           severity: warning
         annotations:
           summary: "Unusual memory consumption rate (instance {{ $labels.instance }})"
-          description: "Memory is being consumed at a rate of more than 10MB/min\n  VALUE = {{ $value | humanize }}B/s"
+          description: "Memory is being consumed at a rate of more than 10MB/s (~600MB/min)\n  VALUE = {{ $value | humanize }}B/s"
