@@ -11,7 +11,10 @@ groups:
           description: "Container {{ $labels.name }} has restarted in the last 15 minutes"
 
       - alert: ContainerHighMemoryUsage
-        expr: (container_memory_usage_bytes{name!=""} / (container_spec_memory_limit_bytes{name!=""} > 0) * 100) > 80
+        # working_set excludes reclaimable page cache (the value the kernel uses
+        # for OOM decisions); usage_bytes counts file cache and false-fires
+        # during media playback/direct-play. See jellyfin incident 2026-05-28.
+        expr: (container_memory_working_set_bytes{name!=""} / (container_spec_memory_limit_bytes{name!=""} > 0) * 100) > 80
         for: 5m
         labels:
           severity: warning
