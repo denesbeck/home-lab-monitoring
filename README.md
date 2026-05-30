@@ -6,24 +6,19 @@ Originally based on the [Prometheus + Docker Compose guide](https://last9.io/blo
 
 ## Architecture
 
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│ Node Exporter│     │   cAdvisor   │     │   Promtail   │
-│  (host metrics)    │ (container   │     │   (log       │
-│              │     │  metrics)    │     │   shipper)   │
-└──────┬───────┘     └──────┬───────┘     └──────┬───────┘
-       │                    │                    │
-       ▼                    ▼                    ▼
-┌──────────────────────────────┐         ┌──────────────┐
-│          Prometheus          │         │     Loki     │
-│  (metrics storage + alerts)  │         │ (log storage)│
-└──────┬───────────────┬───────┘         └──────┬───────┘
-       │               │                        │
-       ▼               ▼                        │
-┌──────────────┐ ┌──────────────┐               │
-│ Alertmanager │ │   Grafana    │◄──────────────┘
-│  (Discord)   │ │ (dashboards) │
-└──────────────┘ └──────────────┘
+```mermaid
+flowchart TD
+    NE["Node Exporter<br/>(host metrics)"] --> PROM
+    CAD["cAdvisor<br/>(container metrics)"] --> PROM
+    PT["Promtail<br/>(log shipper)"] --> LOKI
+
+    PROM["Prometheus<br/>(metrics storage + alerts)"]
+    LOKI["Loki<br/>(log storage)"]
+
+    PROM --> AM["Alertmanager"]
+    AM --> DISCORD["Discord"]
+    PROM --> GRAF["Grafana<br/>(dashboards)"]
+    LOKI --> GRAF
 ```
 
 ## Components
@@ -46,7 +41,7 @@ All ports are bound to `127.0.0.1` (localhost only).
 - **HighCPULoad** - CPU usage > 80% for 5m
 - **HighMemoryLoad** - Memory usage > 80% for 5m
 - **HighDiskUsage** - Disk usage > 85% for 5m
-- **UnusualMemoryGrowth** - Memory consumed at > 10MB/min for 10m
+- **UnusualMemoryGrowth** - Available memory declining at > 10MB/s for 10m
 
 ### Container alerts (`prometheus/rules/container_alerts.yml`)
 - **ContainerRestarting** - Container restarted in the last 15m
