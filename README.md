@@ -48,9 +48,6 @@ All ports are bound to `127.0.0.1` (localhost only).
 - **ContainerHighMemoryUsage** - Container memory > 80% of limit for 5m
 - **ContainerCPUThrottling** - Container CPU throttling > 25% for 5m
 
-### UPS alerts (`prometheus/rules/ups_alerts.yml`)
-- **PowerOutage** - Router unreachable for 1m (triggers shutdown sequence)
-
 ## Setup
 
 ### 1. Clone and start
@@ -123,8 +120,7 @@ Requires `curl` and `jq`.
 │   └── rules/
 │       ├── container_alerts.yml
 │       ├── node_alerts.yml
-│       ├── recording_rules.yml # Pre-computed metrics (CPU, memory)
-│       └── ups_alerts.yml
+│       └── recording_rules.yml # Pre-computed metrics (CPU, memory)
 ├── promtail/
 │   └── config.yml              # Docker + journal log scraping
 ├── docker-compose.yml
