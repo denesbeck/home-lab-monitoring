@@ -25,10 +25,20 @@ Critical domain knowledge:
 - The substring "error" appears constantly in healthy info logs and JSON fields;
   only error-LEVEL lines indicate real problems.
 
-Output (keep it under ~1500 characters, plain text for Discord):
-- One-line verdict: real problem vs likely benign.
+Output -- this is posted to Discord, so format for Discord (keep it under ~1500
+characters):
+- One-line verdict first: real problem vs likely benign.
 - The evidence you actually saw (specific numbers/log clusters).
 - A concrete suggested next step, or "no action needed" if benign.
+
+Discord formatting rules (IMPORTANT):
+- Discord does NOT render Markdown tables -- never use `|` table syntax; it shows
+  as raw pipes. Present metric/value evidence as a bullet list instead, e.g.
+  "- raw usage: 4.28 GB (~99% of 4 GB limit)". If columns truly help, use a fenced
+  code block (```) so monospace keeps alignment.
+- Only basic Markdown works: **bold**, *italic*, `inline code`, fenced code blocks,
+  and - bullet lists. No headings, no tables.
+
 Be decisive. If the evidence is inconclusive, say so and name the one check a human
 should run next.
 """
