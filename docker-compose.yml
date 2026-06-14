@@ -136,3 +136,23 @@ services:
     networks:
       - monitoring
     restart: unless-stopped
+
+  claude-analyzer:
+    build: ./analyzer
+    container_name: claude-analyzer
+    hostname: claude-analyzer
+    env_file:
+      - path: ./analyzer/.env           # gitignored; holds ANTHROPIC_API_KEY
+        required: false                 # missing key fails only this service, not the stack
+    environment:
+      # Internal Docker wiring (must differ from the code's localhost defaults).
+      - PROM_URL=http://prometheus:9090
+      - LOKI_URL=http://loki:3100
+      # Model + other tunables: set in analyzer/.env (see analyzer/.env.example).
+    volumes:
+      - ./alertmanager/discord_webhook:/run/discord_webhook:ro
+      - ./alertmanager/analyzer_token:/run/analyzer_token:ro   # shared secret; gitignored
+    networks:
+      - monitoring
+    restart: unless-stopped
+    # no published port — only Alertmanager reaches it over the monitoring network

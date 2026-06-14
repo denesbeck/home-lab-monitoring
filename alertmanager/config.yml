@@ -18,3 +18,11 @@ receivers:
           **{{ .Annotations.summary }}**
           {{ .Annotations.description }}
           {{ end }}
+    # Also notify the AI analyzer, which investigates and posts an enriched
+    # follow-up to Discord. The raw alert above is unaffected if it is down.
+    webhook_configs:
+      - url: http://claude-analyzer:8080/alert
+        send_resolved: false
+        http_config:
+          authorization:
+            credentials_file: /etc/alertmanager/analyzer_token

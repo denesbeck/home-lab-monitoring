@@ -1,1 +1,6 @@
 alertmanager/discord_webhook
+alertmanager/analyzer_token
+analyzer/.env
+analyzer/.venv/
+__pycache__/
+*.pyc

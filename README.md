@@ -17,6 +17,10 @@ flowchart TD
 
     PROM --> AM["Alertmanager"]
     AM --> DISCORD["Discord"]
+    AM -->|webhook| ANALYZER["claude-analyzer<br/>(AI alert investigation)"]
+    ANALYZER --> DISCORD
+    ANALYZER -.queries.-> PROM
+    ANALYZER -.queries.-> LOKI
     PROM --> GRAF["Grafana<br/>(dashboards)"]
     LOKI --> GRAF
 ```
@@ -32,8 +36,67 @@ flowchart TD
 | **Loki** | Log aggregation and storage (15d retention) | `3100` |
 | **Promtail** | Log shipping from Docker containers and systemd journal | - |
 | **Alertmanager** | Alert routing and notifications via Discord | `9093` |
+| **claude-analyzer** | AI alert investigation: on each firing alert, queries Prometheus/Loki with Claude and posts an enriched hypothesis to Discord | internal only |
 
-All ports are bound to `127.0.0.1` (localhost only).
+All ports are bound to `127.0.0.1` (localhost only). `claude-analyzer` publishes no port — Alertmanager reaches it over the internal `monitoring` network.
+
+## AI Alert Analysis (`claude-analyzer`)
+
+Cheap deterministic rules stay the trigger; Claude does the investigation burst. When an alert fires, Alertmanager posts the raw notification to Discord **and** webhooks `claude-analyzer`, which investigates that specific alert (correlating Prometheus metrics and Loki logs via a shared, token-efficient tool layer) and posts a short hypothesis as a follow-up message. If the analyzer or the Claude API is down, the raw alert is unaffected.
+
+The same tools are exposed over MCP (`analyzer/mcp_server.py`, registered in `.mcp.json`) for ad-hoc debugging from Claude Code using your subscription — no API key. The automated webhook path uses an `ANTHROPIC_API_KEY`.
+
+The MCP launcher (`analyzer/mcp-launch.sh`) opens an SSH tunnel to the server on demand (Prometheus/Loki are bound to `127.0.0.1`), so no manual port-forwarding is needed. Server details are **not** stored in the repo — the launcher references an `~/.ssh/config` Host alias. Add one on your laptop:
+
+```sshconfig
+# ~/.ssh/config
+Host homelab-monitoring
+    HostName <your-server-ip>
+    Port     <your-ssh-port>
+    User     <your-user>
+```
+
+If your alias already has a different name, point the launcher at it via the `MONITORING_SSH` env var in `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "home-lab-monitoring": {
+      "command": "bash",
+      "args": ["analyzer/mcp-launch.sh"],
+      "env": { "MONITORING_SSH": "your-alias" }
+    }
+  }
+}
+```
+
+The launcher prefers `uv`; if it's absent it falls back to a local `.venv`.
+
+### Setup
+
+```sh
+# 1. API key (gitignored), used only by the webhook service
+cp analyzer/.env.example analyzer/.env
+# edit analyzer/.env and set ANTHROPIC_API_KEY=...
+
+# 2. Shared secret between Alertmanager and the analyzer (gitignored)
+openssl rand -hex 32 > alertmanager/analyzer_token
+chmod 644 alertmanager/analyzer_token   # readable by both containers
+
+# 3. Build and start
+docker compose up -d --build claude-analyzer
+
+# 4. Reload Alertmanager so it picks up the new webhook receiver
+curl -X POST http://127.0.0.1:9093/-/reload   # or: docker compose restart alertmanager
+```
+
+Test end-to-end without waiting for a real alert by replaying the sample payload:
+
+```sh
+docker compose exec alertmanager \
+  wget -qO- --header="Authorization: Bearer $(cat alertmanager/analyzer_token)" \
+  --post-file=- http://claude-analyzer:8080/alert < analyzer/sample_alert.json
+```
 
 ## Alert Rules
 

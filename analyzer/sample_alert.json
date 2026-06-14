@@ -1,0 +1,21 @@
+{
+  "version": "4",
+  "status": "firing",
+  "receiver": "discord-notifications",
+  "groupLabels": { "alertname": "ContainerHighMemoryUsage" },
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "ContainerHighMemoryUsage",
+        "name": "jellyfin",
+        "severity": "warning"
+      },
+      "annotations": {
+        "summary": "Container jellyfin high memory usage",
+        "description": "jellyfin memory usage is above threshold"
+      },
+      "startsAt": "2026-06-14T12:00:00Z"
+    }
+  ]
+}

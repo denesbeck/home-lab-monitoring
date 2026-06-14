@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "home-lab-monitoring": {
+      "command": "bash",
+      "args": ["analyzer/mcp-launch.sh"]
+    }
+  }
+}
