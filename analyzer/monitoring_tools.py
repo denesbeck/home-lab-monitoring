@@ -116,6 +116,40 @@ def prom_alerts() -> dict:
     }
 
 
+def prom_rules(name_filter: str = "") -> dict:
+    """Return defined Prometheus alerting rules with their actual expressions.
+
+    Use this to read what an alert actually checks (its PromQL `expr`) instead of
+    guessing from metric values.
+
+    Args:
+        name_filter: Optional substring; only rules whose alert name contains it
+            are returned. Empty returns all alerting rules.
+    """
+    with _client() as c:
+        r = c.get(f"{PROM_URL}/api/v1/rules")
+        r.raise_for_status()
+        groups = r.json()["data"]["groups"]
+    rules = []
+    for g in groups:
+        for rule in g.get("rules", []):
+            if rule.get("type") != "alerting":
+                continue
+            name = rule.get("name", "")
+            if name_filter and name_filter.lower() not in name.lower():
+                continue
+            rules.append(
+                {
+                    "name": name,
+                    "expr": rule.get("query"),
+                    "for": rule.get("duration"),
+                    "labels": rule.get("labels", {}),
+                    "annotations": rule.get("annotations", {}),
+                }
+            )
+    return {"rules": rules}
+
+
 def _loki_range(query: str, window: str, limit: int = 500) -> list:
     end = int(time.time() * 1e9)
     start = end - _window_seconds(window) * 10**9
@@ -195,6 +229,7 @@ TOOL_FUNCS = {
     "prom_instant": prom_instant,
     "prom_range": prom_range,
     "prom_alerts": prom_alerts,
+    "prom_rules": prom_rules,
     "loki_error_summary": loki_error_summary,
     "loki_logs": loki_logs,
     "list_containers": list_containers,
@@ -227,6 +262,16 @@ ANTHROPIC_TOOLS = [
         "name": "prom_alerts",
         "description": "Return currently active Prometheus alerts (firing and pending).",
         "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "prom_rules",
+        "description": "Return defined alerting rules with their actual PromQL expr. Use this to read what an alert checks instead of guessing from metric values.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "name_filter": {"type": "string", "description": "Optional substring to match alert names", "default": ""},
+            },
+        },
     },
     {
         "name": "loki_error_summary",

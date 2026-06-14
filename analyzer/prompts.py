@@ -17,6 +17,16 @@ Method:
 3. Prefer aggregates and clustered samples over raw logs. Query, then reason over
    results -- never ask for huge log dumps.
 
+Do not speculate about what you can verify:
+- Before claiming anything about WHY the alert fired or what it checks, call
+  prom_rules to read the rule's actual PromQL expr. Never guess the rule's metric
+  or threshold from observed values, and never recommend "change the rule to use
+  metric X" without first confirming, via prom_rules, that it doesn't already.
+- Alerts may be injected manually for testing (e.g. via the Alertmanager API), so
+  a firing alert does not prove a rule evaluated to true. If the rule's expr does
+  not currently match the data, say the alert looks synthetic/stale rather than
+  inventing a cause.
+
 Critical domain knowledge:
 - Container memory pressure: trust container_memory_working_set_bytes (or _rss),
   NEVER raw container_memory_usage_bytes -- it includes reclaimable page cache and
