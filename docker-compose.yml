@@ -28,7 +28,7 @@ services:
       - monitoring
     restart: unless-stopped
   loki:
-    image: grafana/loki:3.7.2
+    image: grafana/loki:3.7.4
     container_name: loki
     hostname: loki
     volumes:
@@ -43,7 +43,7 @@ services:
       - monitoring
     restart: unless-stopped
   prometheus:
-    image: prom/prometheus:v3.11.3
+    image: prom/prometheus:v3.13.1
     container_name: prometheus
     hostname: prometheus
     volumes:
@@ -64,7 +64,7 @@ services:
     restart: unless-stopped
 
   node-exporter:
-    image: prom/node-exporter:v1.11.1
+    image: prom/node-exporter:v1.12.1
     container_name: node-exporter
     hostname: node-exporter
     volumes:
@@ -105,7 +105,7 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:13.0.1
+    image: grafana/grafana:13.1.1
     container_name: grafana
     volumes:
       - grafana_data:/var/lib/grafana
@@ -123,7 +123,7 @@ services:
     restart: unless-stopped
 
   alertmanager:
-    image: prom/alertmanager:v0.32.1
+    image: prom/alertmanager:v0.33.1
     container_name: alertmanager
     hostname: alertmanager
     volumes:
