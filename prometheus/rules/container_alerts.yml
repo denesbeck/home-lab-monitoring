@@ -22,6 +22,33 @@ groups:
           summary: "Container high memory usage ({{ $labels.name }})"
           description: "Container {{ $labels.name }} memory usage is {{ $value }}%"
 
+      # Fires when a container that existed an hour ago is no longer being
+      # reported by cadvisor at all — removed, or exited and not restarted.
+      # Nothing else covers this: ContainerRestarting keys off
+      # container_start_time_seconds, which cadvisor reports as container
+      # *creation* time (constant across the daily 03:00 reboot) and which
+      # simply stops existing once the container is gone. netalertx was
+      # `docker rm`'d on 2026-09-02 and went unnoticed for 9 days.
+      #
+      # `for: 10m` is what makes this safe across the daily reboot: every
+      # container is briefly unscraped at 03:00, but they are all back within
+      # ~60s. Note the alert self-resolves about an hour after the container
+      # disappears, when the offset side ages out — so it notifies once
+      # (repeat_interval is 1h) rather than nagging about a deliberate
+      # removal. That is the trade for not hardcoding an expected-container
+      # list, which netalertx-style intentional removals would keep firing.
+      - alert: ContainerDisappeared
+        expr: |
+          count by (name) (count_over_time(container_last_seen{name!=""}[15m] offset 1h))
+          unless
+          count by (name) (container_last_seen{name!=""})
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container disappeared ({{ $labels.name }})"
+          description: "Container {{ $labels.name }} was running an hour ago and is no longer reported by cadvisor. Check `docker ps -a`; if it was removed on purpose, clear its nginx vhost and Pi-hole DNS entry too."
+
       - alert: ContainerCPUThrottling
         expr: rate(container_cpu_cfs_throttled_periods_total{name!=""}[5m]) / rate(container_cpu_cfs_periods_total{name!=""}[5m]) > 0.25
         for: 5m

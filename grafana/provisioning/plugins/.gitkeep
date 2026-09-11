@@ -1,0 +1,4 @@
+# Grafana scans every directory under provisioning/ at startup and logs
+# `level=error msg="Failed to read plugin provisioning files from directory"`
+# when one is missing. This directory exists only to silence that; app
+# plugins can be provisioned here if ever needed.

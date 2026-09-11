@@ -1,0 +1,4 @@
+# Same as plugins/: without this directory Grafana logs
+# `level=error msg="can't read alerting provisioning files from directory"`
+# on every boot. Grafana-managed alert rules would go here — note the
+# alerting for this stack lives in Prometheus rules + Alertmanager, not here.
