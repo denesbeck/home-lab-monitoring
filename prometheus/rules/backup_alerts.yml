@@ -1,0 +1,35 @@
+groups:
+  - name: backup_alerts
+    rules:
+      # The script's own ERR trap covers a run that fails. This covers the run
+      # that never happens (stopped cron, wiped crontab), which the trap cannot
+      # see. 2h leaves one missed hourly run of slack.
+      - alert: VaultwardenBackupStale
+        expr: time() - vaultwarden_backup_last_success_timestamp_seconds > 7200
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Vaultwarden backup is stale"
+          description: "No Vaultwarden backup has reached S3 for {{ $value | humanizeDuration }}\n  Check /var/log/backup-vaultwarden.log and the hourly cron."
+
+      - alert: VaultwardenBackupFailing
+        expr: vaultwarden_backup_success == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Vaultwarden backup failed"
+          description: "The last Vaultwarden backup run exited non-zero\n  Check /var/log/backup-vaultwarden.log."
+
+      # Written by the backup script to node_exporter's textfile dir, so it
+      # survives reboots on disk. Absent means node_exporter is down or the
+      # .prom was removed -- either way the two alerts above are blind.
+      - alert: VaultwardenBackupMetricMissing
+        expr: absent(vaultwarden_backup_last_success_timestamp_seconds)
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Vaultwarden backup metric missing"
+          description: "vaultwarden_backup_last_success_timestamp_seconds is not being reported; backup staleness alerting is blind until it returns."
