@@ -11,9 +11,8 @@ groups:
           description: "Container {{ $labels.name }} has restarted in the last 15 minutes"
 
       - alert: ContainerHighMemoryUsage
-        # working_set excludes reclaimable page cache (the value the kernel uses
-        # for OOM decisions); usage_bytes counts file cache and false-fires
-        # during media playback/direct-play. See jellyfin incident 2026-05-28.
+        # working_set, not usage_bytes: the latter counts reclaimable page cache
+        # and false-fires during media playback.
         expr: (container_memory_working_set_bytes{name!=""} / (container_spec_memory_limit_bytes{name!=""} > 0) * 100) > 80
         for: 5m
         labels:
@@ -22,21 +21,9 @@ groups:
           summary: "Container high memory usage ({{ $labels.name }})"
           description: "Container {{ $labels.name }} memory usage is {{ $value }}%"
 
-      # Fires when a container that existed an hour ago is no longer being
-      # reported by cadvisor at all — removed, or exited and not restarted.
-      # Nothing else covers this: ContainerRestarting keys off
-      # container_start_time_seconds, which cadvisor reports as container
-      # *creation* time (constant across the daily 03:00 reboot) and which
-      # simply stops existing once the container is gone. netalertx was
-      # `docker rm`'d on 2026-09-02 and went unnoticed for 9 days.
-      #
-      # `for: 10m` is what makes this safe across the daily reboot: every
-      # container is briefly unscraped at 03:00, but they are all back within
-      # ~60s. Note the alert self-resolves about an hour after the container
-      # disappears, when the offset side ages out — so it notifies once
-      # (repeat_interval is 1h) rather than nagging about a deliberate
-      # removal. That is the trade for not hardcoding an expected-container
-      # list, which netalertx-style intentional removals would keep firing.
+      # A container gone from cadvisor entirely; ContainerRestarting cannot see it.
+      # 10m clears the daily 03:00 reboot. Self-resolves once the offset side ages
+      # out, so a deliberate removal notifies once instead of nagging.
       - alert: ContainerDisappeared
         expr: |
           count by (name) (count_over_time(container_last_seen{name!=""}[15m] offset 1h))

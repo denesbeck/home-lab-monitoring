@@ -1,18 +1,7 @@
 #!/usr/bin/env bash
-# Launcher for the home-lab monitoring MCP server (interactive use from Claude Code).
-#
-# Brings up an SSH tunnel to the server (idempotently) so the MCP server can reach
-# Prometheus/Loki on 127.0.0.1, then starts the server. No manual port-forwarding.
-#
-# The SSH target is an ~/.ssh/config Host alias, so NO server details (host, port,
-# user) live in this repo. Define the alias in ~/.ssh/config (see README), e.g.:
-#
-#   Host homelab-monitoring
-#     HostName <your-server-ip>
-#     Port     <your-ssh-port>
-#     User     <your-user>
-#
-# Override the alias name via the MONITORING_SSH env var if you prefer a different one.
+# Opens an SSH tunnel so the MCP server can reach Prometheus/Loki on 127.0.0.1,
+# then starts it. SSH_TARGET is an ~/.ssh/config Host alias so no server details
+# live in this repo -- see README to define it.
 set -euo pipefail
 
 SSH_TARGET="${MONITORING_SSH:-homelab-monitoring}"

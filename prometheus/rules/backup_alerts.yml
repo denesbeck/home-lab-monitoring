@@ -1,9 +1,8 @@
 groups:
   - name: backup_alerts
     rules:
-      # The script's own ERR trap covers a run that fails. This covers the run
-      # that never happens (stopped cron, wiped crontab), which the trap cannot
-      # see. 2h leaves one missed hourly run of slack.
+      # Covers the run that never happens (stopped cron), which the ERR trap
+      # cannot see. Hourly backup, so 2h allows one missed run.
       - alert: VaultwardenBackupStale
         expr: time() - vaultwarden_backup_last_success_timestamp_seconds > 7200
         for: 10m
@@ -22,9 +21,8 @@ groups:
           summary: "Vaultwarden backup failed"
           description: "The last Vaultwarden backup run exited non-zero\n  Check /var/log/backup-vaultwarden.log."
 
-      # Written by the backup script to node_exporter's textfile dir, so it
-      # survives reboots on disk. Absent means node_exporter is down or the
-      # .prom was removed -- either way the two alerts above are blind.
+      # Absent means node_exporter is down or the .prom was removed -- either way
+      # the two alerts above are blind.
       - alert: VaultwardenBackupMetricMissing
         expr: absent(vaultwarden_backup_last_success_timestamp_seconds)
         for: 15m
@@ -33,3 +31,34 @@ groups:
         annotations:
           summary: "Vaultwarden backup metric missing"
           description: "vaultwarden_backup_last_success_timestamp_seconds is not being reported; backup staleness alerting is blind until it returns."
+
+      # Daily at 01:00; 36h allows one missed run, since the host is sometimes
+      # powered off overnight.
+      - alert: PhotosBackupStale
+        expr: time() - photos_backup_last_success_timestamp_seconds > 129600
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Photo backup is stale"
+          description: "No verified photo snapshot for {{ $value | humanizeDuration }}\n  Check /var/log/backup-photos.log and the 01:00 cron."
+
+      # Set by the ERR trap and by every guard. All of them refuse rotation, so
+      # existing backups survive the failure.
+      - alert: PhotosBackupFailing
+        expr: photos_backup_success == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Photo backup failed"
+          description: "The last photo backup run did not produce a verified snapshot\n  Check /var/log/backup-photos.log."
+
+      - alert: PhotosBackupMetricMissing
+        expr: absent(photos_backup_last_success_timestamp_seconds)
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Photo backup metric missing"
+          description: "photos_backup_last_success_timestamp_seconds is not being reported; photo backup staleness alerting is blind until it returns. Expected after the first run of backup-photos.sh."

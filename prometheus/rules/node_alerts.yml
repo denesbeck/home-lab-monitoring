@@ -28,11 +28,52 @@ groups:
           summary: "High disk usage (instance {{ $labels.instance }})"
           description: "Disk usage is > 85%\n  VALUE = {{ $value }}%\n  LABELS: {{ $labels }}"
 
+      # A vanished mount is an absent series, not a changed value, so HighDiskUsage
+      # cannot see it. One rule per mount: absent() only carries labels forward from
+      # equality matchers. 10m clears the daily 03:00 reboot.
+      - alert: FilesystemMissing
+        expr: absent(node_filesystem_size_bytes{mountpoint="/mnt/photos"})
+        for: 10m
+        labels:
+          severity: critical
+          mountpoint: /mnt/photos
+        annotations:
+          summary: "/mnt/photos is not mounted"
+          description: "The photo library is unmounted. The 01:00 backup will refuse to run while this holds. Check `mountpoint /mnt/photos`, `lsblk`, and the USB enclosure."
+
+      - alert: FilesystemMissing
+        expr: absent(node_filesystem_size_bytes{mountpoint="/mnt/backups"})
+        for: 10m
+        labels:
+          severity: critical
+          mountpoint: /mnt/backups
+        annotations:
+          summary: "/mnt/backups is not mounted"
+          description: "The backup target is unmounted. Both the photo snapshots and the Vaultwarden archives land here."
+
+      - alert: FilesystemMissing
+        expr: absent(node_filesystem_size_bytes{mountpoint="/mnt/private"})
+        for: 10m
+        labels:
+          severity: critical
+          mountpoint: /mnt/private
+        annotations:
+          summary: "/mnt/private is not mounted"
+          description: "The private share is unmounted; Samba and filebrowser are serving an empty directory."
+
+      - alert: FilesystemMissing
+        expr: absent(node_filesystem_size_bytes{mountpoint="/mnt/movies"})
+        for: 10m
+        labels:
+          severity: warning
+          mountpoint: /mnt/movies
+        annotations:
+          summary: "/mnt/movies is not mounted"
+          description: "The media library is unmounted; Jellyfin and qBittorrent have lost their content."
+
       - alert: UnusualMemoryGrowth
-        # deriv() is per-second, so this threshold is -10 MB/s (~600 MB/min) of
-        # sustained MemAvailable decline -- intentionally leak-only; tighter
-        # thresholds false-fire on benign activity (e.g. ~11 MB/min during media
-        # playback, 2026-05-28).
+        # deriv() is per-second, so this is -10 MB/s of sustained MemAvailable
+        # decline. Leak-only by design: tighter thresholds fire on media playback.
         expr: deriv(node_memory_MemAvailable_bytes[30m]) < -10 * 1024 * 1024
         for: 10m
         labels:

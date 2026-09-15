@@ -24,8 +24,7 @@ PROM_URL = os.environ.get("PROM_URL", "http://127.0.0.1:9090").rstrip("/")
 LOKI_URL = os.environ.get("LOKI_URL", "http://127.0.0.1:3100").rstrip("/")
 HTTP_TIMEOUT = float(os.environ.get("HTTP_TIMEOUT", "30"))
 
-# Matches genuine error-LEVEL lines, not the substring "error" inside info logs
-# (the distinction that mattered in the manual 7-day review).
+# Matches error-LEVEL lines, not the substring "error" inside info logs.
 ERROR_RE = r'(?i)(level=err|\[err|"error"|level=fatal|panic:|exception)'
 
 _UNIT_SECONDS = {"s": 1, "m": 60, "h": 3600, "d": 86400, "w": 604800}
