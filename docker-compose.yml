@@ -43,7 +43,7 @@ services:
       - monitoring
     restart: unless-stopped
   prometheus:
-    image: prom/prometheus:v3.13.1
+    image: prom/prometheus:v3.14.0
     container_name: prometheus
     hostname: prometheus
     volumes:
@@ -105,7 +105,7 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:13.1.1
+    image: grafana/grafana:13.2.2
     container_name: grafana
     volumes:
       - grafana_data:/var/lib/grafana
@@ -123,7 +123,7 @@ services:
     restart: unless-stopped
 
   alertmanager:
-    image: prom/alertmanager:v0.33.1
+    image: prom/alertmanager:v0.34.0
     container_name: alertmanager
     hostname: alertmanager
     volumes:
