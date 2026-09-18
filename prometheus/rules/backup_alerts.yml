@@ -41,7 +41,7 @@ groups:
           severity: warning
         annotations:
           summary: "Photo backup is stale"
-          description: "No verified photo snapshot for {{ $value | humanizeDuration }}\n  Check /var/log/backup-photos.log and the 01:00 cron."
+          description: "No verified photo snapshot for {{ $value | humanizeDuration }}\n  Check /var/log/backup-photos.log and the 6-hourly cron at :15."
 
       # Set by the ERR trap and by every guard. All of them refuse rotation, so
       # existing backups survive the failure.
@@ -62,3 +62,30 @@ groups:
         annotations:
           summary: "Photo backup metric missing"
           description: "photos_backup_last_success_timestamp_seconds is not being reported; photo backup staleness alerting is blind until it returns. Expected after the first run of backup-photos.sh."
+
+      - alert: PrivateBackupStale
+        expr: time() - private_backup_last_success_timestamp_seconds > 64800
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Private backup is stale"
+          description: "No verified private snapshot for {{ $value | humanizeDuration }}\n  Check /var/log/backup-private.log and the 6-hourly cron at :45."
+
+      - alert: PrivateBackupFailing
+        expr: private_backup_success == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Private backup failed"
+          description: "The last private backup run did not produce a verified snapshot\n  Check /var/log/backup-private.log."
+
+      - alert: PrivateBackupMetricMissing
+        expr: absent(private_backup_last_success_timestamp_seconds)
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Private backup metric missing"
+          description: "private_backup_last_success_timestamp_seconds is not being reported; private backup staleness alerting is blind until it returns. Expected after the first run of backup-private.sh."
