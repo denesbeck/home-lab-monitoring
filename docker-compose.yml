@@ -116,6 +116,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_SERVER_ROOT_URL=https://grafana.arcade-lab.io
     ports:
       - "127.0.0.1:3000:3000"
     networks:
@@ -142,8 +143,8 @@ services:
     container_name: claude-analyzer
     hostname: claude-analyzer
     env_file:
-      - path: ./analyzer/.env           # gitignored; holds ANTHROPIC_API_KEY
-        required: false                 # missing key fails only this service, not the stack
+      - path: ./analyzer/.env # gitignored; holds ANTHROPIC_API_KEY
+        required: false # missing key fails only this service, not the stack
     environment:
       # Internal Docker wiring (must differ from the code's localhost defaults).
       - PROM_URL=http://prometheus:9090
@@ -151,7 +152,7 @@ services:
       # Model + other tunables: set in analyzer/.env (see analyzer/.env.example).
     volumes:
       - ./alertmanager/discord_webhook:/run/discord_webhook:ro
-      - ./alertmanager/analyzer_token:/run/analyzer_token:ro   # shared secret; gitignored
+      - ./alertmanager/analyzer_token:/run/analyzer_token:ro # shared secret; gitignored
     networks:
       - monitoring
     restart: unless-stopped
