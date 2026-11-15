@@ -90,8 +90,8 @@ groups:
           summary: "Private backup metric missing"
           description: "private_backup_last_success_timestamp_seconds is not being reported; private backup staleness alerting is blind until it returns. Expected after the first run of backup-private.sh."
 
-      # Off-site S3 copies (home-lab-infra backup-offsite.yml). Daily runs, so
-      # 3 days allows two missed. last_success == 0 is handled by NeverCompleted.
+      # Off-site S3 copies (home-lab-infra backup-offsite.yml). 3 days rides out
+      # days the box is off. last_success == 0 is handled by NeverCompleted.
       - alert: OffsitePhotosBackupStale
         expr: time() - offsite_photos_backup_last_success_timestamp_seconds > 259200 and offsite_photos_backup_last_success_timestamp_seconds > 0
         for: 1h
@@ -99,7 +99,7 @@ groups:
           severity: warning
         annotations:
           summary: "Off-site photo backup is stale"
-          description: "The S3 copy of /mnt/photos was last verified {{ $value | humanizeDuration }} ago\n  Check /var/log/backup-offsite-photos.log and the daily cron at 10:05 UTC."
+          description: "The S3 copy of /mnt/photos was last verified {{ $value | humanizeDuration }} ago\n  Check /var/log/backup-offsite-photos.log and the hourly cron at :05."
 
       - alert: OffsitePhotosBackupFailing
         expr: offsite_photos_backup_success == 0
