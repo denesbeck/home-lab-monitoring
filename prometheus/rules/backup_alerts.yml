@@ -89,3 +89,87 @@ groups:
         annotations:
           summary: "Private backup metric missing"
           description: "private_backup_last_success_timestamp_seconds is not being reported; private backup staleness alerting is blind until it returns. Expected after the first run of backup-private.sh."
+
+      # Off-site S3 copies (home-lab-infra backup-offsite.yml). Daily runs, so
+      # 3 days allows two missed. last_success == 0 is handled by NeverCompleted.
+      - alert: OffsitePhotosBackupStale
+        expr: time() - offsite_photos_backup_last_success_timestamp_seconds > 259200 and offsite_photos_backup_last_success_timestamp_seconds > 0
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Off-site photo backup is stale"
+          description: "The S3 copy of /mnt/photos was last verified {{ $value | humanizeDuration }} ago\n  Check /var/log/backup-offsite-photos.log and the daily cron at 10:05 UTC."
+
+      - alert: OffsitePhotosBackupFailing
+        expr: offsite_photos_backup_success == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Off-site photo backup failed"
+          description: "The last off-site photo run failed or did not verify\n  Check /var/log/backup-offsite-photos.log."
+
+      - alert: OffsitePhotosBackupNeverCompleted
+        expr: offsite_photos_backup_last_success_timestamp_seconds == 0 and (time() - offsite_photos_backup_first_attempt_timestamp_seconds > 259200)
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "First off-site photo upload has not finished"
+          description: "No complete S3 copy of /mnt/photos 3+ days after the first attempt\n  Check /var/log/backup-offsite-photos.log; consider raising offsite_backup_max_bandwidth."
+
+      # Photos almost never change; skips the first full upload.
+      - alert: OffsitePhotosMassUpload
+        expr: offsite_photos_backup_uploaded_files > 0.2 * offsite_photos_backup_file_count and (time() - offsite_photos_backup_first_attempt_timestamp_seconds > 604800)
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Off-site photo run re-uploaded most of the library"
+          description: "The last run uploaded {{ $value }} photo files (>20% of the library)\n  If you did not just import, rename or move photos, something may be overwriting the off-site copy. Overwritten versions are kept for 180 days.\n  Check /var/log/backup-offsite-photos.log."
+
+      - alert: OffsitePhotosBackupMetricMissing
+        expr: absent(offsite_photos_backup_last_run_timestamp_seconds)
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Off-site photo backup metric missing"
+          description: "offsite_photos_backup_* is not being reported; off-site photo alerting is blind until it returns. The playbook seeds the .prom file, so this means node_exporter is down or the file was removed."
+
+      - alert: OffsitePrivateBackupStale
+        expr: time() - offsite_private_backup_last_success_timestamp_seconds > 259200 and offsite_private_backup_last_success_timestamp_seconds > 0
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Off-site private backup is stale"
+          description: "The S3 copy of /mnt/private was last verified {{ $value | humanizeDuration }} ago\n  Check /var/log/backup-offsite-private.log and the daily cron at 10:50 UTC."
+
+      - alert: OffsitePrivateBackupFailing
+        expr: offsite_private_backup_success == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Off-site private backup failed"
+          description: "The last off-site private run failed or did not verify\n  Check /var/log/backup-offsite-private.log."
+
+      - alert: OffsitePrivateBackupNeverCompleted
+        expr: offsite_private_backup_last_success_timestamp_seconds == 0 and (time() - offsite_private_backup_first_attempt_timestamp_seconds > 259200)
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "First off-site private upload has not finished"
+          description: "No complete S3 copy of /mnt/private 3+ days after the first attempt\n  Check /var/log/backup-offsite-private.log."
+
+      - alert: OffsitePrivateBackupMetricMissing
+        expr: absent(offsite_private_backup_last_run_timestamp_seconds)
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Off-site private backup metric missing"
+          description: "offsite_private_backup_* is not being reported; off-site private alerting is blind until it returns. The playbook seeds the .prom file, so this means node_exporter is down or the file was removed."
