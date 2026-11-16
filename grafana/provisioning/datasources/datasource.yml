@@ -10,3 +10,11 @@ datasources:
     type: loki
     access: proxy
     url: http://loki:3100
+  - name: Alertmanager
+    type: alertmanager
+    access: proxy
+    url: http://alertmanager:9093
+    jsonData:
+      implementation: prometheus
+      # Alerts come from Prometheus rules; Grafana only manages silences here.
+      handleGrafanaManagedAlerts: false
