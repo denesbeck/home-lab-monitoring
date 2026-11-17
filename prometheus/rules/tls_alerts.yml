@@ -1,0 +1,29 @@
+groups:
+  - name: tls_alerts
+    rules:
+      # certbot renews at 30 days left.
+      - alert: TLSCertExpiringSoon
+        expr: tls_cert_not_after_timestamp_seconds - time() < 14 * 86400
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "TLS certificate for {{ $labels.host }} expires soon"
+          description: "The certificate nginx serves expires in {{ $value | humanizeDuration }}\n  Check `sudo certbot renew --dry-run`."
+
+      - alert: TLSCertExpiryCritical
+        expr: tls_cert_not_after_timestamp_seconds - time() < 3 * 86400
+        labels:
+          severity: critical
+        annotations:
+          summary: "TLS certificate for {{ $labels.host }} expires in under 3 days"
+          description: "Expires in {{ $value | humanizeDuration }}; every *.arcade-lab.io service breaks when it does."
+
+      - alert: TLSCertCheckMissing
+        expr: absent(tls_cert_not_after_timestamp_seconds) or time() - tls_cert_check_last_run_timestamp_seconds > 3 * 3600
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "TLS certificate check is not reporting"
+          description: "tls-cert-check.sh failed to read the served certificate or has stopped running."

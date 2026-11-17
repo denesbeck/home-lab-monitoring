@@ -4,7 +4,7 @@ groups:
       # Covers the run that never happens (stopped cron), which the ERR trap
       # cannot see. Hourly backup, so 2h allows one missed run.
       - alert: VaultwardenBackupStale
-        expr: time() - vaultwarden_backup_last_success_timestamp_seconds > 7200
+        expr: time() - vaultwarden_backup_last_success_timestamp_seconds > 7200 and on(instance) (time() - node_boot_time_seconds > 7200)
         for: 10m
         labels:
           severity: critical
